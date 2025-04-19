@@ -27,7 +27,6 @@
 #include "rust-hir-type-check-pattern.h"
 #include "rust-hir-trait-resolve.h"
 #include "rust-identifier.h"
-#include "rust-session-manager.h"
 #include "rust-immutable-name-resolution-context.h"
 #include "rust-substitution-mapper.h"
 #include "rust-type-util.h"
