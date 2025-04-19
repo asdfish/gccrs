@@ -565,6 +565,8 @@ TypeCheckItem::resolve_impl_item (HIR::ImplBlock &impl_block,
 void
 TypeCheckItem::visit (HIR::Function &function)
 {
+  TypeCheckContextItemPin pin (*context, TypeCheckContextItem (&function));
+
   auto lifetime_pin = context->push_clean_lifetime_resolver ();
   std::vector<TyTy::SubstitutionParamMapping> substitutions;
   if (function.has_generics ())
@@ -605,6 +607,8 @@ TypeCheckItem::visit (HIR::Function &function)
       params.push_back (
 	TyTy::FnParam (param.get_param_name ().clone_pattern (), param_tyty));
     }
+
+  // TODO walk these for any new opaque types
 
   auto path = CanonicalPath::create_empty ();
 

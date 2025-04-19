@@ -83,6 +83,18 @@ private:
   Item item;
 };
 
+class TypeCheckContext;
+class TypeCheckContextItemPin
+{
+public:
+  TypeCheckContextItemPin (TypeCheckContext &ctx, TypeCheckContextItem item);
+
+  ~TypeCheckContextItemPin ();
+
+private:
+  TypeCheckContext &ctx;
+};
+
 class TypeCheckBlockContextItem
 {
 public:
@@ -196,6 +208,11 @@ public:
   TyTy::BaseType *peek_loop_context ();
   TyTy::BaseType *pop_loop_context ();
 
+  bool have_context () const;
+  TypeCheckContextItem peek_context_stack ();
+  void push_context_stack (TypeCheckContextItem item);
+  void pop_context_stack ();
+
   void swap_head_loop_context (TyTy::BaseType *val);
 
   void insert_trait_reference (DefId id, TraitReference &&ref);
@@ -275,6 +292,7 @@ private:
   std::vector<std::unique_ptr<TyTy::BaseType>> builtins;
   std::vector<std::pair<TypeCheckContextItem, TyTy::BaseType *>>
     return_type_stack;
+  std::vector<TypeCheckContextItem> context_stack;
   std::vector<TyTy::BaseType *> loop_type_stack;
   StackedContexts<TypeCheckBlockContextItem> block_stack;
   std::map<DefId, TraitReference> trait_context;

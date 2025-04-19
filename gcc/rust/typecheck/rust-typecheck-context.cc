@@ -22,6 +22,18 @@
 namespace Rust {
 namespace Resolver {
 
+TypeCheckContextItemPin::TypeCheckContextItemPin (TypeCheckContext &ctx,
+						  TypeCheckContextItem item)
+  : ctx (ctx)
+{
+  ctx.push_context_stack (item);
+}
+
+TypeCheckContextItemPin::~TypeCheckContextItemPin ()
+{
+  ctx.pop_context_stack ();
+}
+
 TypeCheckContext *
 TypeCheckContext::get ()
 {
@@ -220,6 +232,31 @@ TypeCheckContext::pop_loop_context ()
   auto back = peek_loop_context ();
   loop_type_stack.pop_back ();
   return back;
+}
+
+bool
+TypeCheckContext::have_context () const
+{
+  return !context_stack.empty ();
+}
+
+TypeCheckContextItem
+TypeCheckContext::peek_context_stack ()
+{
+  rust_assert (have_context ());
+  return context_stack.back ();
+}
+
+void
+TypeCheckContext::push_context_stack (TypeCheckContextItem item)
+{
+  context_stack.push_back (item);
+}
+
+void
+TypeCheckContext::pop_context_stack ()
+{
+  context_stack.pop_back ();
 }
 
 void

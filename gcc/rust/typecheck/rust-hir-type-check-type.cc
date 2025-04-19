@@ -779,6 +779,14 @@ TypeCheckType::visit (HIR::NeverType &type)
 void
 TypeCheckType::visit (HIR::ImplTraitType &type)
 {
+  if (!context->have_context ())
+    {
+      rich_location r (line_table, type.get_locus ());
+      rust_error_at (r, ErrorCode::E0562,
+		     "%<impl Trait%> not allowed outside of function and "
+		     "inherent method return types");
+    }
+
   std::vector<TyTy::TypeBoundPredicate> specified_bounds;
   for (auto &bound : type.get_type_param_bounds ())
     {

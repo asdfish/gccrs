@@ -3628,6 +3628,9 @@ OpaqueType::clone () const
 BaseType *
 OpaqueType::resolve () const
 {
+  const int limit = 20;
+  int counter = 0;
+
   TyVar var (get_ty_ref ());
   BaseType *r = var.get_tyty ();
 
@@ -3641,10 +3644,12 @@ OpaqueType::resolve () const
       BaseType *n = v.get_tyty ();
 
       // fix infinite loop
+      rust_assert (counter < limit);
       if (r == n)
 	break;
 
       r = n;
+      counter++;
     }
 
   if (r->get_kind () == TypeKind::OPAQUE && (r->get_ref () == r->get_ty_ref ()))
@@ -3656,6 +3661,15 @@ OpaqueType::resolve () const
 bool
 OpaqueType::is_equal (const BaseType &other) const
 {
+  if (get_kind () != other.get_kind ())
+    {
+      if (!can_resolve ())
+	return false;
+
+      // return resolve ()->is_equal (other);
+      return false;
+    }
+
   auto other2 = static_cast<const OpaqueType &> (other);
   if (can_resolve () != other2.can_resolve ())
     return false;
@@ -3678,7 +3692,7 @@ OpaqueType::handle_substitions (SubstitutionArgumentMappings &subst_mappings)
 
   // there are two cases one where we substitute directly to a new PARAM and
   // otherwise
-  if (arg.get_tyty ()->get_kind () == TyTy::TypeKind::PARAM)
+  if (arg.get_tyty ()->get_kind () == TyTy::TypeKind::OPAQUE)
     {
       p->set_ty_ref (arg.get_tyty ()->get_ref ());
       return p;

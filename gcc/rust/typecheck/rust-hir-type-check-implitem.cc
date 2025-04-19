@@ -200,6 +200,8 @@ TypeCheckImplItem::Resolve (
 void
 TypeCheckImplItem::visit (HIR::Function &function)
 {
+  TypeCheckContextItemPin pin (*context,
+			       TypeCheckContextItem (parent, &function));
   auto binder_pin = context->push_lifetime_binder ();
 
   if (function.has_generics ())
