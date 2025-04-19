@@ -73,6 +73,13 @@ TypeCheckType::Resolve (HIR::Type &type)
   return resolver.translated;
 }
 
+std::string
+TypeCheckType::generate_impl_symbol ()
+{
+  static int counter = 0;
+  return std::string ("IMPL_") + std::to_string (counter++);
+}
+
 void
 TypeCheckType::visit (HIR::BareFunctionType &fntype)
 {
@@ -797,7 +804,7 @@ TypeCheckType::visit (HIR::ImplTraitType &type)
 	specified_bounds.push_back (std::move (predicate));
     }
 
-  translated = new TyTy::OpaqueType (type.get_locus (),
+  translated = new TyTy::OpaqueType (generate_impl_symbol (), type.get_locus (),
 				     type.get_mappings ().get_hirid (),
 				     specified_bounds);
 }

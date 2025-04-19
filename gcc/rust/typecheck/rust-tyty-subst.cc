@@ -28,14 +28,35 @@
 namespace Rust {
 namespace TyTy {
 
-SubstitutionParamMapping::SubstitutionParamMapping (HIR::TypeParam &generic,
+SubstitutionDecl::SubstitutionDecl () : type_param (tl::nullopt) {}
+
+SubstitutionDecl::SubstitutionDecl (HIR::TypeParam &param) : type_param (param)
+{}
+
+SubstitutionDecl::SubstitutionDecl (const SubstitutionDecl &other)
+  : type_param (other.type_param)
+{}
+
+tl::optional<HIR::TypeParam &> &
+SubstitutionDecl::get_type_param ()
+{
+  return type_param;
+}
+
+const tl::optional<HIR::TypeParam &> &
+SubstitutionDecl::get_type_param () const
+{
+  return type_param;
+}
+
+SubstitutionParamMapping::SubstitutionParamMapping (SubstitutionDecl decl,
 						    ParamType *param)
-  : generic (generic), param (param)
+  : decl (decl), param (param)
 {}
 
 SubstitutionParamMapping::SubstitutionParamMapping (
   const SubstitutionParamMapping &other)
-  : generic (other.generic), param (other.param)
+  : decl (other.decl), param (other.param)
 {}
 
 std::string
@@ -50,7 +71,7 @@ SubstitutionParamMapping::as_string () const
 SubstitutionParamMapping
 SubstitutionParamMapping::clone () const
 {
-  return SubstitutionParamMapping (generic,
+  return SubstitutionParamMapping (decl,
 				   static_cast<ParamType *> (param->clone ()));
 }
 
@@ -66,10 +87,16 @@ SubstitutionParamMapping::get_param_ty () const
   return param;
 }
 
-HIR::TypeParam &
-SubstitutionParamMapping::get_generic_param ()
+SubstitutionDecl &
+SubstitutionParamMapping::get_decl ()
 {
-  return generic;
+  return decl;
+}
+
+const SubstitutionDecl &
+SubstitutionParamMapping::get_decl () const
+{
+  return decl;
 }
 
 bool
@@ -81,19 +108,30 @@ SubstitutionParamMapping::needs_substitution () const
 location_t
 SubstitutionParamMapping::get_param_locus () const
 {
-  return generic.get_locus ();
+  const auto &d = decl.get_type_param ();
+  if (!d.has_value ())
+    return UNKNOWN_LOCATION;
+
+  return d.value ().get_locus ();
 }
 
 bool
 SubstitutionParamMapping::param_has_default_ty () const
 {
-  return generic.has_type ();
+  const auto &d = decl.get_type_param ();
+  if (!decl.get_type_param ().has_value ())
+    return false;
+
+  return d.value ().has_type ();
 }
 
 BaseType *
 SubstitutionParamMapping::get_default_ty () const
 {
-  TyVar var (generic.get_type_mappings ().get_hirid ());
+  rust_assert (param_has_default_ty ());
+
+  const auto &d = decl.get_type_param ();
+  TyVar var (d.value ().get_type_mappings ().get_hirid ());
   return var.get_tyty ();
 }
 
@@ -315,10 +353,17 @@ bool
 SubstitutionArgumentMappings::get_argument_for_symbol (
   const ParamType *param_to_find, SubstitutionArg *argument) const
 {
+  return get_argument_for_symbol (param_to_find->get_symbol (), argument);
+}
+
+bool
+SubstitutionArgumentMappings::get_argument_for_symbol (
+  const std::string &param_to_find, SubstitutionArg *argument) const
+{
   for (const auto &mapping : mappings)
     {
       const ParamType *p = mapping.get_param_ty ();
-      if (p->get_symbol () == param_to_find->get_symbol ())
+      if (p->get_symbol () == param_to_find)
 	{
 	  *argument = mapping;
 	  return true;

@@ -417,11 +417,11 @@ class OpaqueType : public BaseType
 public:
   static constexpr auto KIND = TypeKind::OPAQUE;
 
-  OpaqueType (location_t locus, HirId ref,
+  OpaqueType (std::string symbol, location_t locus, HirId ref,
 	      std::vector<TypeBoundPredicate> specified_bounds,
 	      std::set<HirId> refs = std::set<HirId> ());
 
-  OpaqueType (location_t locus, HirId ref, HirId ty_ref,
+  OpaqueType (std::string symbol, location_t locus, HirId ref, HirId ty_ref,
 	      std::vector<TypeBoundPredicate> specified_bounds,
 	      std::set<HirId> refs = std::set<HirId> ());
 
@@ -443,6 +443,10 @@ public:
   bool is_equal (const BaseType &other) const override;
 
   OpaqueType *handle_substitions (SubstitutionArgumentMappings &mappings);
+
+private:
+  // this is a generated symbol name so they can be differentiated
+  std::string symbol;
 };
 
 class StructFieldType

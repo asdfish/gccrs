@@ -243,11 +243,11 @@ TypeCheckImplItem::visit (HIR::Function &function)
       // compilation to know parameter names. The types are ignored but we
       // reuse the HIR identifier pattern which requires it
       HIR::SelfParam &self_param = function.get_self_param_unchecked ();
-      // FIXME: which location should be used for Rust::Identifier for `self`?
       std::unique_ptr<HIR::Pattern> self_pattern
 	= std::make_unique<HIR::IdentifierPattern> (
-	  HIR::IdentifierPattern (mapping, {"self"}, self_param.get_locus (),
-				  self_param.is_ref (), self_param.get_mut (),
+	  HIR::IdentifierPattern (mapping, {"self", self_param.get_locus ()},
+				  self_param.get_locus (), self_param.is_ref (),
+				  self_param.get_mut (),
 				  std::unique_ptr<HIR::Pattern> (nullptr)));
 
       // might have a specified type

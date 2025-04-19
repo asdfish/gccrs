@@ -39,12 +39,31 @@ struct RegionConstraints
   std::vector<std::pair<ParamType *, Region>> type_region;
 };
 
+// we could store the HIR::TypeParm but we need to handle OpaqueTypes which
+// don't have it so lets make a synthetic one
+class SubstitutionDecl
+{
+public:
+  SubstitutionDecl ();
+
+  SubstitutionDecl (HIR::TypeParam &param);
+
+  SubstitutionDecl (const SubstitutionDecl &other);
+
+  tl::optional<HIR::TypeParam &> &get_type_param ();
+
+  const tl::optional<HIR::TypeParam &> &get_type_param () const;
+
+private:
+  tl::optional<HIR::TypeParam &> type_param;
+};
+
 class BaseType;
 class SubstitutionArgumentMappings;
 class SubstitutionParamMapping
 {
 public:
-  SubstitutionParamMapping (HIR::TypeParam &generic, ParamType *param);
+  SubstitutionParamMapping (SubstitutionDecl decl, ParamType *param);
 
   SubstitutionParamMapping (const SubstitutionParamMapping &other);
 
@@ -59,7 +78,8 @@ public:
 
   const ParamType *get_param_ty () const;
 
-  HIR::TypeParam &get_generic_param ();
+  SubstitutionDecl &get_decl ();
+  const SubstitutionDecl &get_decl () const;
 
   // this is used for the backend to override the HirId ref of the param to
   // what the concrete type is for the rest of the context
@@ -76,7 +96,7 @@ public:
   bool need_substitution () const;
 
 private:
-  HIR::TypeParam &generic;
+  SubstitutionDecl decl;
   ParamType *param;
 };
 
@@ -206,6 +226,9 @@ public:
   bool is_error () const;
 
   bool get_argument_for_symbol (const ParamType *param_to_find,
+				SubstitutionArg *argument) const;
+
+  bool get_argument_for_symbol (const std::string &sym,
 				SubstitutionArg *argument) const;
 
   /** Return type parameter index for symbol */

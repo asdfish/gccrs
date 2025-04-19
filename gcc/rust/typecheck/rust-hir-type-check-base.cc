@@ -501,8 +501,9 @@ TypeCheckBase::resolve_generic_params (
   for (auto &subst : substitutions)
     {
       auto pty = subst.get_param_ty ();
-      TypeResolveGenericParam::ApplyAnyTraitBounds (subst.get_generic_param (),
-						    pty);
+      auto &decl = subst.get_decl ().get_type_param ();
+      if (decl.has_value ())
+	TypeResolveGenericParam::ApplyAnyTraitBounds (decl.value (), pty);
     }
 }
 

@@ -197,11 +197,17 @@ GenericTyPerCrateCtx::debug_print_solutions ()
 	    }
 	  for (auto &param : adt->get_substs ())
 	    {
+	      const auto &decl = param.get_decl ().get_type_param ();
+
 	      if (i > solution_index)
 		result += ", ";
-	      result += param.get_generic_param ()
-			  .get_type_representation ()
-			  .as_string ();
+
+	      std::string representation = "__no_hir_type_param__";
+	      if (decl.has_value ())
+		representation
+		  = decl.value ().get_type_representation ().as_string ();
+
+	      result += representation;
 	      result += "=";
 	      result += solutions[i].as_string ();
 	      i++;
@@ -239,8 +245,12 @@ GenericTyVisitorCtx::process_type (ADTType &ty)
   first_type = first_lifetime + ty.get_used_arguments ().get_regions ().size ();
 
   for (auto &param : ty.get_substs ())
-    param_names.push_back (
-      param.get_generic_param ().get_type_representation ().as_string ());
+    {
+      const auto &decl = param.get_decl ().get_type_param ();
+      if (decl.has_value ())
+	param_names.push_back (
+	  decl.value ().get_type_representation ().as_string ());
+    }
 
   for (const auto &variant : ty.get_variants ())
     {

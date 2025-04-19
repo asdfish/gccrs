@@ -3558,22 +3558,27 @@ ParamType::is_implicit_self_trait () const
 
 // OpaqueType
 
-OpaqueType::OpaqueType (location_t locus, HirId ref,
+OpaqueType::OpaqueType (std::string symbol, location_t locus, HirId ref,
 			std::vector<TypeBoundPredicate> specified_bounds,
 			std::set<HirId> refs)
   : BaseType (ref, ref, KIND,
-	      {Resolver::CanonicalPath::new_seg (UNKNOWN_NODEID, "impl"),
+	      {Resolver::CanonicalPath::new_seg (UNKNOWN_NODEID,
+						 "impl " + symbol),
 	       locus},
-	      specified_bounds, refs)
+	      specified_bounds, refs),
+    symbol (symbol)
 {}
 
-OpaqueType::OpaqueType (location_t locus, HirId ref, HirId ty_ref,
+OpaqueType::OpaqueType (std::string symbol, location_t locus, HirId ref,
+			HirId ty_ref,
 			std::vector<TypeBoundPredicate> specified_bounds,
 			std::set<HirId> refs)
   : BaseType (ref, ty_ref, KIND,
-	      {Resolver::CanonicalPath::new_seg (UNKNOWN_NODEID, "impl"),
+	      {Resolver::CanonicalPath::new_seg (UNKNOWN_NODEID,
+						 "impl " + symbol),
 	       locus},
-	      specified_bounds, refs)
+	      specified_bounds, refs),
+    symbol (symbol)
 {}
 
 bool
@@ -3616,7 +3621,7 @@ OpaqueType::can_eq (const BaseType *other, bool emit_errors) const
 BaseType *
 OpaqueType::clone () const
 {
-  return new OpaqueType (ident.locus, get_ref (), get_ty_ref (),
+  return new OpaqueType (symbol, ident.locus, get_ref (), get_ty_ref (),
 			 get_specified_bounds (), get_combined_refs ());
 }
 
@@ -3664,30 +3669,26 @@ OpaqueType::is_equal (const BaseType &other) const
 OpaqueType *
 OpaqueType::handle_substitions (SubstitutionArgumentMappings &subst_mappings)
 {
-  // SubstitutionArg arg = SubstitutionArg::error ();
-  // bool ok = subst_mappings.get_argument_for_symbol (this, &arg);
-  // if (!ok || arg.is_error ())
-  //   return this;
+  SubstitutionArg arg = SubstitutionArg::error ();
+  bool ok = subst_mappings.get_argument_for_symbol (symbol, &arg);
+  if (!ok || arg.is_error ())
+    return this;
 
-  // OpaqueType *p = static_cast<OpaqueType *> (clone ());
-  // subst_mappings.on_param_subst (*p, arg);
+  OpaqueType *p = static_cast<OpaqueType *> (clone ());
 
-  // // there are two cases one where we substitute directly to a new PARAM and
-  // // otherwise
-  // if (arg.get_tyty ()->get_kind () == TyTy::TypeKind::PARAM)
-  //   {
-  //     p->set_ty_ref (arg.get_tyty ()->get_ref ());
-  //     return p;
-  //   }
+  // there are two cases one where we substitute directly to a new PARAM and
+  // otherwise
+  if (arg.get_tyty ()->get_kind () == TyTy::TypeKind::PARAM)
+    {
+      p->set_ty_ref (arg.get_tyty ()->get_ref ());
+      return p;
+    }
 
-  // // this is the new subst that this needs to pass
-  // p->set_ref (mappings.get_next_hir_id ());
-  // p->set_ty_ref (arg.get_tyty ()->get_ref ());
+  // this is the new subst that this needs to pass
+  p->set_ref (mappings.get_next_hir_id ());
+  p->set_ty_ref (arg.get_tyty ()->get_ref ());
 
-  // return p;
-
-  rust_unreachable ();
-  return nullptr;
+  return p;
 }
 
 // StrType

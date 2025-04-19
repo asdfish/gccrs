@@ -48,6 +48,8 @@ class TypeCheckType : public TypeCheckBase, public HIR::HIRTypeVisitor
 public:
   static TyTy::BaseType *Resolve (HIR::Type &type);
 
+  static std::string generate_impl_symbol ();
+
   void visit (HIR::BareFunctionType &fntype) override;
   void visit (HIR::TupleType &tuple) override;
   void visit (HIR::TypePath &path) override;
